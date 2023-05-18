@@ -1,9 +1,13 @@
 use std::thread;
+use std::process;
 use std::net::{TcpListener, TcpStream, Shutdown};
 use std::io::{Read, Write};
+use thread_id;
 
 fn handle_client(mut stream: TcpStream){
     let mut data = [0 as u8; 50];
+    println!("My pid is {}", process::id());
+    println!("My thread id is {}",thread_id::get());
     while match stream.read(&mut data){
         Ok(size) => {
             stream.write(&data[0..size]).unwrap();
