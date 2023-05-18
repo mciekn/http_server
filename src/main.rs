@@ -20,7 +20,7 @@ fn handle_client(mut stream: TcpStream){
 
 
 fn main() {
-    let listener = TcpListener::bind("0.0.0.0:2137").unwrap();
+    let listener = TcpListener::bind("127.0.0.1:2137").unwrap();
     println!("Server listening on port 2137");
     for stream in listener.incoming() {
         match stream {
