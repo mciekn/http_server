@@ -72,6 +72,8 @@ fn main() {
     drop(listener);
 }
 
+/// HTTP request representation
+/// TODO: MOVE TO ANOTHER FILE
 
 struct HttpRequest {
     method: String,
