@@ -8,25 +8,30 @@ use chrono::prelude::*;
 
 fn handle_client(mut stream: TcpStream){
     let mut data = [0 as u8; 500];
-    println!("My pid is {}", process::id());
-    println!("My thread id is {}",thread_id::get());
+
     while match stream.read(&mut data){
         Ok(size) => {
             let data = String::from_utf8_lossy(&data[0..size]);
-            println!("Received data: {}", data);
 
             let request = HttpRequest::from_string(&data).unwrap();
 
+            /*
+            println!("My pid is {}", process::id());
+            println!("My thread id is {}",thread_id::get());
             println!("Request method: {}", request.method);
             println!("Request path: {}", request.path);
             println!("Request headers: {:?}", request.headers);
             println!("Request body: {}", request.body);
+            */
 
-            let logLine = create_log_string("INFO", &request.method, &request.path, &stream.peer_addr().unwrap().to_string());
+            let logLine = received_log_string("INFO", &request.method, &request.path, &stream.peer_addr().unwrap().to_string());
             println!("{}", logLine);
 
 
-            let requestMethod = request.method;
+            let requestMethod = &request.method;
+
+            let logLine = processing_log_string("INFO", &request.method, &request.path, &stream.peer_addr().unwrap().to_string());
+            println!("{}", logLine);
 
             let mut response= HttpResponse::new(
                 404,
@@ -51,7 +56,10 @@ fn handle_client(mut stream: TcpStream){
             }
 
             match stream.write(response.to_string().as_bytes()) {
-                Ok(_) => println!("Response sent"),
+                Ok(_) => {
+                    let logLine = response_log_string("INFO", &request.method, &request.path, &stream.peer_addr().unwrap().to_string(), response.status_code);
+                    println!("{}", logLine)
+                },
                 Err(e) => println!("Failed sending response: {}", e)
             }
             //stream.shutdown(Shutdown::Both).unwrap();
@@ -73,7 +81,7 @@ fn main() {
     for stream in listener.incoming() {
         match stream {
             Ok(stream) => {
-                println!("New connection: {}", stream.peer_addr().unwrap());
+                //println!("New connection: {}", stream.peer_addr().unwrap());
                 thread::spawn(move || {
                     handle_client(stream)
                 });
@@ -179,12 +187,30 @@ fn handle_delete_request(path: &str) -> HttpResponse {
     response
 }
 
-fn create_log_string(level: &str, method: &str, path: &str, ip: &str) -> String {
+fn received_log_string(level: &str, method: &str, path: &str, ip: &str) -> String {
     let timestamp = Local::now().format("[%Y-%m-%d %H:%M:%S]");
 
     format!(
         "{} {}: Request received - Method: {}, Path: {}, IP: {}",
         timestamp, level, method, path, ip
+    )
+}
+
+fn processing_log_string(level: &str, method: &str, path: &str, ip: &str) -> String {
+    let timestamp = Local::now().format("[%Y-%m-%d %H:%M:%S]");
+
+    format!(
+        "{} {}: Processing request - Method: {}, Path: {}, IP: {}",
+        timestamp, level, method, path, ip
+    )
+}
+
+fn response_log_string(level: &str, method: &str, path: &str, ip: &str, status_code: u16) -> String {
+    let timestamp = Local::now().format("[%Y-%m-%d %H:%M:%S]");
+
+    format!(
+        "{} {}: Request processed successfully - Method: {}, Path: {}, IP: {}, Status code: {}",
+        timestamp, level, method, path, ip, status_code
     )
 }
 
