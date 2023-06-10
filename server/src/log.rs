@@ -1,4 +1,3 @@
-use std::fmt::Error;
 use chrono::prelude::*;
 
 pub fn starting_server_log(level: &str, port: u16) -> String {

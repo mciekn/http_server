@@ -1,7 +1,7 @@
-mod HttpRequest;
-mod HttpResponse;
-mod Log;
-mod RequestHandler;
+mod http_request;
+mod http_response;
+mod log;
+mod request_handler;
 
 use std::fmt::Error;
 use std::thread;
@@ -18,7 +18,7 @@ fn handle_client(mut stream: TcpStream){
     while match stream.read(&mut data){
         Ok(size) => {
             let data = String::from_utf8_lossy(&data[0..size]);
-            let request = HttpRequest::HttpRequest::from_string(&data).unwrap();
+            let request = http_request::HttpRequest::from_string(&data).unwrap();
 
             /*
             println!("My pid is {}", process::id());
@@ -29,39 +29,38 @@ fn handle_client(mut stream: TcpStream){
             println!("Request body: {}", request.body);
             */
 
-            println!("{}", Log::received_log("INFO", &request.method, &request.path, &stream.peer_addr().unwrap().to_string()));
+            println!("{}", log::received_log("INFO", &request.method, &request.path, &stream.peer_addr().unwrap().to_string()));
 
 
-            let requestMethod = &request.method;
+            let request_method = &request.method;
 
-            println!("{}", Log::processing_log("INFO", &request.method, &request.path, &stream.peer_addr().unwrap().to_string()));
+            println!("{}", log::processing_log("INFO", &request.method, &request.path, &stream.peer_addr().unwrap().to_string()));
 
-            let mut response= HttpResponse::HttpResponse::new(
+            let mut response= http_response::HttpResponse::new(
                 404,
                 vec![("Content-Type".to_string(), "text/html".to_string())],
                 "<html><body><h1>404</h1></body></html>".to_string(),
             );
 
-            match requestMethod.as_str() {
+            match request_method.as_str() {
                 "GET" => {
-                    response = RequestHandler::handle_get_request(&request.path);
+                    response = request_handler::handle_get_request(&request.path);
                 },
                 "POST" => {
-                    response = RequestHandler::handle_post_request(&request.path, &request.body);
+                    response = request_handler::handle_post_request(&request.path, &request.body);
                 },
                 "PUT" => {
-                    response = RequestHandler::handle_put_request(&request.path, &request.body);
+                    response = request_handler::handle_put_request(&request.path, &request.body);
                 },
                 "DELETE" => {
-                    response = RequestHandler::handle_delete_request(&request.path);
+                    response = request_handler::handle_delete_request(&request.path);
                 }
                 _ => println!("Unknown request method")
             }
 
             match stream.write(response.to_string().as_bytes()) {
                 Ok(_) => {
-                    let logLine = Log::response_log("INFO", &request.method, &request.path, &stream.peer_addr().unwrap().to_string(), response.status_code);
-                    println!("{}", logLine)
+                    println!("{}", log::response_log("INFO", &request.method, &request.path, &stream.peer_addr().unwrap().to_string(), response.status_code));
                 },
                 Err(e) => println!("Failed sending response: {}", e)
             }
@@ -69,7 +68,7 @@ fn handle_client(mut stream: TcpStream){
             false
         },
         Err(e) => {
-            println!("{}", Log::internal_server_error_log("ERROR", e.to_string(), 500));
+            println!("{}", log::internal_server_error_log("ERROR", e.to_string(), 500));
             stream.shutdown(Shutdown::Both).unwrap();
             false
         }
@@ -80,7 +79,7 @@ fn handle_client(mut stream: TcpStream){
 
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:2137").unwrap();
-    println!("{}", Log::starting_server_log("INFO", 2137));
+    println!("{}", log::starting_server_log("INFO", 2137));
     for stream in listener.incoming() {
         match stream {
             Ok(stream) => {
