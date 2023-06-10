@@ -108,7 +108,10 @@ fn handle_get_request(path: &str) -> HttpResponse {
                 HttpResponse::new(
                 200,
                 vec![("Content-Type".to_string(), "text/html".to_string())],
-                "<html><body><h1>Hello World!</h1></body></html>".to_string(),
+                "<html>\
+                <body><h1>Welcome on our sample page!</h1></body>\
+                <a href=\"/about\">About</a></body>\
+                <br><a href=\"/contact\">Contact</a></body></html>".to_string(),
             );
         }
         "/about" => {
