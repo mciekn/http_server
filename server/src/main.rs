@@ -4,6 +4,7 @@ use std::net::{TcpListener, TcpStream, Shutdown};
 use std::io::{Read, Write};
 use std::thread::Thread;
 use thread_id;
+use chrono::prelude::*;
 
 fn handle_client(mut stream: TcpStream){
     let mut data = [0 as u8; 500];
@@ -21,6 +22,10 @@ fn handle_client(mut stream: TcpStream){
             println!("Request headers: {:?}", request.headers);
             println!("Request body: {}", request.body);
 
+            let logLine = create_log_string("INFO", &request.method, &request.path, &stream.peer_addr().unwrap().to_string());
+            println!("{}", logLine);
+
+
             let requestMethod = request.method;
 
             match requestMethod.as_str() {
@@ -31,12 +36,18 @@ fn handle_client(mut stream: TcpStream){
                 _ => println!("Unknown request method")
             }
 
+            let response = HttpResponse::new(
+                200,
+                vec![("Content-Type".to_string(), "text/html".to_string())],
+                "<html><body><h1>Hello World!</h1></body></html>".to_string(),
+            );
 
 
 
-            let response = "HTTP/1.1 200 OK\r\n\r\n<html><body><h1>Hello World!</h1></body></html>";
 
-            match stream.write(response.as_bytes()) {
+            //let response = "HTTP/1.1 200 OK\r\n\r\n<html><body><h1>Hello World!</h1></body></html>";
+
+            match stream.write(response.to_string().as_bytes()) {
                 Ok(_) => println!("Response sent"),
                 Err(e) => println!("Failed sending response: {}", e)
             }
@@ -70,6 +81,43 @@ fn main() {
         }
     }
     drop(listener);
+}
+
+fn create_log_string(level: &str, method: &str, path: &str, ip: &str) -> String {
+    let timestamp = Local::now().format("[%Y-%m-%d %H:%M:%S]");
+
+    format!(
+        "{} {}: Request received - Method: {}, Path: {}, IP: {}",
+        timestamp, level, method, path, ip
+    )
+}
+
+
+struct HttpResponse {
+    status_code: u16,
+    headers: Vec<(String, String)>,
+    body: String,
+}
+
+impl HttpResponse {
+    fn new(status_code: u16, headers: Vec<(String, String)>, body: String) -> Self {
+        HttpResponse {
+            status_code,
+            headers,
+            body,
+        }
+    }
+
+    fn to_string(&self) -> String {
+        let mut response = format!("HTTP/1.1 {}\r\n", self.status_code);
+        for (header_name, header_value) in &self.headers {
+            response.push_str(&format!("{}: {}\r\n", header_name, header_value));
+        }
+        response.push_str("\r\n");
+        response.push_str(&self.body);
+        response
+    }
+
 }
 
 /// HTTP request representation
