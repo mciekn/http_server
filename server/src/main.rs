@@ -28,24 +28,27 @@ fn handle_client(mut stream: TcpStream){
 
             let requestMethod = request.method;
 
-            match requestMethod.as_str() {
-                "GET" => println!("GET"),
-                "POST" => println!("POST"),
-                "PUT" => println!("PUT"),
-                "DELETE" => println!("DELETE"),
-                _ => println!("Unknown request method")
-            }
-
-            let response = HttpResponse::new(
-                200,
+            let mut response= HttpResponse::new(
+                404,
                 vec![("Content-Type".to_string(), "text/html".to_string())],
-                "<html><body><h1>Hello World!</h1></body></html>".to_string(),
+                "<html><body><h1>404</h1></body></html>".to_string(),
             );
 
-
-
-
-            //let response = "HTTP/1.1 200 OK\r\n\r\n<html><body><h1>Hello World!</h1></body></html>";
+            match requestMethod.as_str() {
+                "GET" => {
+                    response = handle_get_request(&request.path);
+                },
+                "POST" => {
+                    response = handle_post_request(&request.path, &request.body);
+                },
+                "PUT" => {
+                    response = handle_put_request(&request.path, &request.body);
+                },
+                "DELETE" => {
+                    response = handle_delete_request(&request.path);
+                }
+                _ => println!("Unknown request method")
+            }
 
             match stream.write(response.to_string().as_bytes()) {
                 Ok(_) => println!("Response sent"),
@@ -81,6 +84,99 @@ fn main() {
         }
     }
     drop(listener);
+}
+
+fn handle_get_request(path: &str) -> HttpResponse {
+    let mut response =
+        HttpResponse::new(
+            404,
+            vec![("Content-Type".to_string(), "text/html".to_string())],
+            "<html><body><h1>404</h1></body></html>".to_string(),
+        );
+
+    match path {
+        "/" => {
+            response =
+                HttpResponse::new(
+                200,
+                vec![("Content-Type".to_string(), "text/html".to_string())],
+                "<html><body><h1>Hello World!</h1></body></html>".to_string(),
+            );
+        }
+        "/about" => {
+            response =
+                HttpResponse::new(
+                200,
+                vec![("Content-Type".to_string(), "text/html".to_string())],
+                "<html><body><h1>About me</h1></body></html>".to_string(),
+            );
+        }
+        _ => {
+        }
+    }
+    response
+}
+
+fn handle_post_request(path: &str, body: &str) -> HttpResponse {
+    let mut response =
+        HttpResponse::new(
+            404,
+            vec![("Content-Type".to_string(), "text/html".to_string())],
+            "<html><body><h1>404</h1></body></html>".to_string(),
+        );
+    match path {
+        "/contact" => {
+            response = HttpResponse::new(
+                200,
+                vec![("Content-Type".to_string(), "text/html".to_string())],
+                "<html><body><h1>Thank you for contacting us!</h1></body></html>".to_string(),
+            );
+        }
+        _ => {}
+    }
+    response
+}
+
+fn handle_put_request(path: &str, body: &str) -> HttpResponse {
+    let mut response =
+        HttpResponse::new(
+            404,
+            vec![("Content-Type".to_string(), "text/html".to_string())],
+            "<html><body><h1>404</h1></body></html>".to_string(),
+        );
+    match path {
+        "/contact" => {
+            response = HttpResponse::new(
+                200,
+                vec![("Content-Type".to_string(), "text/html".to_string())],
+                "<html><body><h1>Thank you for updating your contact information!</h1></body></html>".to_string(),
+            );
+        }
+        _ => {
+        }
+    }
+    response
+}
+
+fn handle_delete_request(path: &str) -> HttpResponse {
+    let mut response =
+        HttpResponse::new(
+            404,
+            vec![("Content-Type".to_string(), "text/html".to_string())],
+            "<html><body><h1>404</h1></body></html>".to_string(),
+        );
+    match path {
+        "/contact" => {
+            response = HttpResponse::new(
+                200,
+                vec![("Content-Type".to_string(), "text/html".to_string())],
+                "<html><body><h1>We are sorry to see you go!</h1></body></html>".to_string(),
+            );
+        }
+        _ => {
+        }
+    }
+    response
 }
 
 fn create_log_string(level: &str, method: &str, path: &str, ip: &str) -> String {
