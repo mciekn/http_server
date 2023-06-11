@@ -22,5 +22,5 @@ impl HttpResponse {
         response.push_str(&self.body);
         response
     }
-
 }
+

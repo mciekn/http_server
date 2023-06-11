@@ -3,10 +3,7 @@ use chrono::prelude::*;
 pub fn starting_server_log(level: &str, port: u16) -> String {
     let timestamp = Local::now().format("[%Y-%m-%d %H:%M:%S]");
 
-    format!(
-        "{} {}: Starting server on port {}",
-        timestamp, level, port
-    )
+    format!("{} {}: Starting server on port {}", timestamp, level, port)
 }
 
 pub fn received_log(level: &str, method: &str, path: &str, ip: &str) -> String {
@@ -44,5 +41,3 @@ pub fn internal_server_error_log(level: &str, error: String, status_code: u16) -
         timestamp, level, status_code, error
     )
 }
-
-
